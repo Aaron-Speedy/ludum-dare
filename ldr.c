@@ -9,18 +9,18 @@
 #define UTILS_IMPL
 #include "utils.h"
 
-#define UI_IMPL
-#include "ui.h"
-
 int main(void) {
   SetConfigFlags(FLAG_MSAA_4X_HINT);
   SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_RESIZABLE);
 
-  InitWindow(800, 600, "Ludum Dare");
+  int win_width = 800, win_height = 600;
+  InitWindow(win_width, win_height, "Ludum Dare");
   SetTargetFPS(60);
   SetExitKey(KEY_Q);
 
   bool initial = true; // This is a terrible solution
+
+  Camera2D camera = { 0 };
 
   while (!WindowShouldClose()) {
     if (IsWindowResized() || initial) {
@@ -35,7 +35,7 @@ int main(void) {
     /* ===== Drawing ===== */
     BeginDrawing();
     ClearBackground(BLACK);
-    BeginMode2D();
+    BeginMode2D(camera);
     {
 
     }
