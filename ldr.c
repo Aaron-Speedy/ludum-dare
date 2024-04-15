@@ -52,21 +52,21 @@ int main(void) {
   SetTargetFPS(60);
   SetExitKey(KEY_Q);
 
-  // Maze maze = gen_maze(0, 0);
+  Maze maze = gen_maze(20, 20);
 
   Player players[2] = {
     {
-      .pos = { 0 },
+      .pos = { maze.w/2, maze.h/2, },
       .size = { 0.9, 0.9, },
-      .speed = 2.2,
+      .speed = 2.9,
       .keys = { KEY_W, KEY_A, KEY_S, KEY_D, },
       .color = RED,
       .health = 1.0,
     },
     {
-      .pos = { 0 },
+      .pos = { maze.w/2, maze.h/2, },
       .size = { 0.9, 0.9, },
-      .speed = 2.2,
+      .speed = 2.9,
       .keys = { KEY_K, KEY_H, KEY_J, KEY_L, },
       .color = BLUE,
       .health = 1.0,
@@ -74,26 +74,23 @@ int main(void) {
   };
   int summoner_index = 0;
 
-  float map_width = 10, map_height = 10;
 
   List(Enemy) enemies = { .cap = 256, };
   da_init(&enemies);
   da_push(&enemies, enemy_defs[ENEMY_GUNMAN]);
-  da_last(&enemies).pos = (Vec2) {
-    .x = randf(0, map_width),
-    .y = randf(0, map_height),
-  };
+  da_last(&enemies).pos = (Vec2) { maze.w/2, maze.h/2, };
 
   bool initial = true; // This is a terrible solution
-  float unit = 0;
+  int unit = 0;
+  float zoom = 0.1;
 
   while (!WindowShouldClose()) {
     if (IsWindowResized() || initial) {
       win_width = GetScreenWidth();
       win_height = GetScreenHeight();
       unit = min(
-        0.1 * win_width,
-        0.1 * win_height
+        zoom * win_width,
+        zoom * win_height
       );
     }
 
@@ -133,19 +130,6 @@ int main(void) {
         // }
       }
 
-      /* ===== Input ===== */
-      {
-        Vec2 vel = { 0 };
-
-        if (IsKeyDown(player->keys[0])) vel.y -= delta * player->speed;
-        if (IsKeyDown(player->keys[1])) vel.x -= delta * player->speed;
-        if (IsKeyDown(player->keys[2])) vel.y += delta * player->speed;
-        if (IsKeyDown(player->keys[3])) vel.x += delta * player->speed;
-
-        player->pos.x += vel.x;
-        player->pos.y += vel.y;
-      }
-
       /* ===== Drawing ===== */
       {
         DrawRectangle(
@@ -167,16 +151,71 @@ int main(void) {
           );
         }
 
+        for (int x = 0; x < maze.w; x++) {
+          for (int y = 0; y < maze.h; y++) {
+            DrawRectangle(
+              unit * x,
+              unit * y,
+              unit, unit,
+              maze_colors[maze_get(maze, x, y)]
+            );
+          }
+        }
+
         // for (int gh)
+      }
+
+      /* ===== Input ===== */
+      {
+        Vec2 vel = { 0 };
+
+        if (IsKeyDown(player->keys[0])) vel.y -= delta * player->speed;
+        if (IsKeyDown(player->keys[1])) vel.x -= delta * player->speed;
+        if (IsKeyDown(player->keys[2])) vel.y += delta * player->speed;
+        if (IsKeyDown(player->keys[3])) vel.x += delta * player->speed;
+
+        // Collision with walls
+        {
+          Vec2 fvels[4] = {
+            { 0, 0, },
+            { 0, vel.y, },
+            { vel.x, 0, },
+            { vel.x, vel.y, },
+          };
+
+          // Collision
+          bool stop = false;
+          for (int i = 1; i < 4 && !stop; i++) {
+            Vec2 fvel = fvels[i];
+
+            for (int x = 0; x <= 1 && !stop; x++) {
+              for (int y = 0; y <= 1; y++) {
+                int vx = player->pos.x + fvel.x + x * player->size.x;
+                int vy = player->pos.y + fvel.y + y * player->size.y;
+                if (maze_get(maze, vx, vy) == WALL) {
+                  vel = fvels[3 - i];
+                  stop = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        player->pos.x += vel.x;
+        player->pos.y += vel.y;
       }
     }
     EndMode2D();
     EndDrawing();
 
     initial = false;
+
+    // printf("%d\n", GetFPS());
   }
 
 end:
+  maze_free(maze);
   CloseWindow();
   return 0;
 }

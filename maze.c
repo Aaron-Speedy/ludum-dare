@@ -1,17 +1,7 @@
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-typedef struct Maze {
-  char *data;
-  int wb, w, h;
-} Maze;
-
-enum{
-  EMPTY = 0,
-  WALL = 1,
-  FLOOR = 2,
-  PIT = 3
-};
+#include "maze.h"
 
 int maze_get(Maze maze, int x, int y){
   if(x < 0 || x >= maze.w || y < 0 || y >= maze.h)
@@ -29,17 +19,17 @@ void maze_set(Maze maze, int x, int y, int v){
   maze.data[x/4 + y*maze.wb] |= (v & 3) << offset;
 }
 
-void maze_hline(Maze maze, int x, int y, int l, int type){
+static void maze_hline(Maze maze, int x, int y, int l, int type){
   for(int i = 0; i < l; i++)
     maze_set(maze, x + i, y, type);
 }
 
-void maze_vline(Maze maze, int x, int y, int l, int type){
+static void maze_vline(Maze maze, int x, int y, int l, int type){
   for(int i = 0; i < l; i++)
     maze_set(maze, x, y + i, type);
 }
 
-void maze_rect(Maze maze, int x, int y, int w, int h, int type){
+static void maze_rect(Maze maze, int x, int y, int w, int h, int type){
   for(int i = 0; i < w; i++){
     for(int j = 0; j < h; j++){
       maze_set(maze, x + i, y + j, FLOOR);
@@ -47,7 +37,7 @@ void maze_rect(Maze maze, int x, int y, int w, int h, int type){
   }
 }
 
-int maze_check(Maze maze, int x, int y, int w, int h){
+static int maze_check(Maze maze, int x, int y, int w, int h){
   for(int i = 0; i < w; i++){
     for(int j = 0; j < h; j++){
       if(maze_get(maze, x + i, y + j) != 0)
@@ -57,7 +47,7 @@ int maze_check(Maze maze, int x, int y, int w, int h){
   return 1;
 }
 
-void maze_box(Maze maze, int x, int y, int w, int h){
+static void maze_box(Maze maze, int x, int y, int w, int h){
   maze_hline(maze, x, y, w, PIT);
   maze_hline(maze, x, y + h - 1, w, PIT);
   maze_vline(maze, x + w - 1, y + 1, h - 2, PIT);
@@ -65,7 +55,7 @@ void maze_box(Maze maze, int x, int y, int w, int h){
   maze_rect(maze, x + 1, y + 1, w - 2, h - 2, FLOOR);
 }
 
-void maze_gen_path(Maze maze, int x, int y){
+static void maze_gen_path(Maze maze, int x, int y){
   int cur = maze_get(maze, x, y);
   if(cur != PIT && cur != 0)
     return;
@@ -100,7 +90,7 @@ void maze_gen_path(Maze maze, int x, int y){
 }
 
 Maze gen_maze(int x, int y){
-  struct Maze maze = {
+  Maze maze = {
     .data = calloc(sizeof(char) * (x/4 + 1) * y, 1),
     .wb = (x/4 + 1),
     .w = x,
@@ -134,7 +124,11 @@ Maze gen_maze(int x, int y){
   return maze;
 }
 
-void print_maze(struct Maze maze){
+void maze_free(Maze maze) {
+  free(maze.data);
+}
+
+void print_maze(Maze maze) {
   for(int i = 0; i < maze.h; i++){
     for(int j = 0; j < maze.w; j++){
       int cur = maze_get(maze, j, i);
