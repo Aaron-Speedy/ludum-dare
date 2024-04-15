@@ -9,6 +9,8 @@
 #define UTILS_IMPL
 #include "utils.h"
 
+#include "maze.h"
+
 #define Vec2 Vector2
 
 #define ENTITY_F() \
@@ -50,19 +52,21 @@ int main(void) {
   SetTargetFPS(60);
   SetExitKey(KEY_Q);
 
+  // Maze maze = gen_maze(0, 0);
+
   Player players[2] = {
     {
       .pos = { 0 },
-      .size = { 1, 1, },
-      .speed = 1.3,
+      .size = { 0.9, 0.9, },
+      .speed = 2.2,
       .keys = { KEY_W, KEY_A, KEY_S, KEY_D, },
       .color = RED,
       .health = 1.0,
     },
     {
       .pos = { 0 },
-      .size = { 1, 1, },
-      .speed = 1.3,
+      .size = { 0.9, 0.9, },
+      .speed = 2.2,
       .keys = { KEY_K, KEY_H, KEY_J, KEY_L, },
       .color = BLUE,
       .health = 1.0,
@@ -116,17 +120,17 @@ int main(void) {
 
       /* ===== Simulation ===== */
       {
-        for (int i = 0; i < enemies.count; i++) {
-          Enemy *enemy = &enemies.items[i];
+        // for (int i = 0; i < enemies.count; i++) {
+        //   Enemy *enemy = &enemies.items[i];
 
-          enemy->pos.x += cos(enemy->dir) * enemy->speed * delta;
-          enemy->pos.y += sin(enemy->dir) * enemy->speed * delta;
+        //   enemy->pos.x += cos(enemy->dir) * enemy->speed * delta;
+        //   enemy->pos.y += sin(enemy->dir) * enemy->speed * delta;
 
-          int follow_index = Vector2Distance(enemy->pos, players[0].pos) <
-                             Vector2Distance(enemy->pos, players[1].pos) ?
-                             0 : 1;
-          enemy->dir = Vector2Angle(enemy->pos, players[follow_index].pos);
-        }
+        //   int follow_index = Vector2Distance(enemy->pos, players[0].pos) <
+        //                      Vector2Distance(enemy->pos, players[1].pos) ?
+        //                      0 : 1;
+        //   enemy->dir = Vector2Angle(enemy->pos, players[follow_index].pos);
+        // }
       }
 
       /* ===== Input ===== */
@@ -162,6 +166,8 @@ int main(void) {
             enemy->color
           );
         }
+
+        // for (int gh)
       }
     }
     EndMode2D();

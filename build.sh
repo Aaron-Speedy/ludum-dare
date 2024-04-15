@@ -3,5 +3,7 @@
 set -xe
 
 CC="${CXX:-cc}"
+CFLAGS="-Wall -ggdb -O3 -std=c11 -pedantic"
 
-gcc ldr.c -o ldr -Wall -ggdb -O3 -std=c11 -pedantic -lraylib
+$CC -c maze.c $CFLAGS
+$CC ldr.c $CFLAGS -o ldr -lraylib maze.o

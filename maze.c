@@ -145,9 +145,8 @@ void print_maze(struct Maze maze){
   }
 }
 
-int main(){
-  struct Maze maze = gen_maze(80, 80);
-  print_maze(maze);
-  return 0;
-}
-
+// int main(){
+//   struct Maze maze = gen_maze(80, 80);
+//   print_maze(maze);
+//   return 0;
+// }
