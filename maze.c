@@ -108,20 +108,17 @@ Maze gen_maze(int x, int y){
   };
 
   for(int i = 0; i < x * y; i++){
-    int w = rand() % 10 + 1;
-    printf("%d\n", w);
-    w = (1.0 / (w * w)) * 32 + 8;
+    int w = rand() % 8 + 1;
+    w = (1.0 / (w * w)) * 32 + 3;
 
-    int h = rand() % 10 + 1;
-    printf("%d\n", h);
-    h = (1.0 / (h * h)) * 32 + 8;
+    int h = rand() % 8 + 1;
+    h = (1.0 / (h * h)) * 32 + 3;
 
-    printf("%d %d\n", w, h);
     for(int i = 0; i < 10; i++){
      int X = rand() % x;
      int Y = rand() % y;
 
-    if(maze_check(maze, X-1, Y-1, w+2, h+2)){
+    if(maze_check(maze, X-2, Y-2, w+4, h+4)){
       maze_box(maze, X, Y, w, h);
       break;
     }
@@ -139,17 +136,18 @@ Maze gen_maze(int x, int y){
 
 void print_maze(struct Maze maze){
   for(int i = 0; i < maze.h; i++){
-    for(int j = 0; j < maze.w; j++)
-      printf("%d", maze_get(maze, j, i));
+    for(int j = 0; j < maze.w; j++){
+      int cur = maze_get(maze, j, i);
+
+      printf("%c%c", "@# ~"[cur], "@# ~"[cur]);
+    }
     printf("\n");
   }
 }
 
-/*
 int main(){
   struct Maze maze = gen_maze(80, 80);
   print_maze(maze);
   return 0;
 }
-*/
 
