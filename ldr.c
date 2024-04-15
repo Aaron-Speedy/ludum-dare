@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 
 #define UTILS_IMPL
 #include "utils.h"
@@ -18,7 +19,7 @@
   Vec2 size; \
   float health; \
   Color color; \
-  float repeat_timer; \
+  float timer; \
   float tps
 
 typedef struct {
@@ -28,8 +29,7 @@ typedef struct {
 
 typedef struct {
   ENTITY_F();
-  Vec2 vel; // normalized
-  float timer;
+  Vec2I dir;
   enum {
     ENEMY_GUNMAN,
     NUM_ENEMIES,
@@ -37,9 +37,10 @@ typedef struct {
 } Enemy;
 
 typedef struct {
-  float dir;
-  float speed;
-  float x, y;
+  ENTITY_F();
+  Vec2I dir;
+  bool freed;
+  float damage;
 } Bullet;
 
 Enemy enemy_defs[NUM_ENEMIES] = {
@@ -53,6 +54,8 @@ Enemy enemy_defs[NUM_ENEMIES] = {
 };
 
 int main(void) {
+  srand(time(0));
+
   SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_WINDOW_RESIZABLE);
 
   int win_width = 800, win_height = 600;
@@ -91,9 +94,10 @@ int main(void) {
   da_push(&enemies, enemy_defs[ENEMY_GUNMAN]);
   da_last(&enemies).x = maze.w/2;
   da_last(&enemies).y = maze.h/2;
+  da_last(&enemies).dir = (Vec2I) { 1, 0, };
 
-  List(Bullet) bullets = { .cap = 256, };
-  da_init(&bullets);
+  Pool(Bullet) bullets;
+  pool_init(&bullets);
 
   bool initial = true; // This is a terrible solution
   int unit = 0;
@@ -132,6 +136,16 @@ int main(void) {
 
       /* ===== Drawing ===== */
       {
+        for (int i = 0; i < bullets.count; i++) {
+          Bullet *bullet = &bullets.items[i];
+          DrawCircle(
+            unit * bullet->x + unit/2,
+            unit * bullet->y + unit/2,
+            unit * 0.1,
+            RED
+          );
+        }
+
         DrawRectangle(
           unit * player->x,
           unit * player->y,
@@ -151,16 +165,6 @@ int main(void) {
           );
         }
 
-        for (int i = 0; i < bullets.count; i++) {
-          Bullet *bullet = &bullets.items[i];
-          DrawCircle(
-            unit * bullet->x,
-            unit * bullet->y,
-            unit * 0.1,
-            RED
-          );
-        }
-
         for (int x = 0; x < maze.w; x++) {
           for (int y = 0; y < maze.h; y++) {
             DrawRectangle(
@@ -177,15 +181,15 @@ int main(void) {
       {
         Vec2I vel = { 0 };
 
-        if (player->repeat_timer <= 0) {
+        if (player->timer <= 0) {
           if (IsKeyDown(player->keys[0])) vel.y = -1;
           if (IsKeyDown(player->keys[1])) vel.x = -1;
           if (IsKeyDown(player->keys[2])) vel.y = +1;
           if (IsKeyDown(player->keys[3])) vel.x = +1;
 
-          player->repeat_timer = 1/player->tps;
+          player->timer = 1/player->tps;
         } else {
-          player->repeat_timer -= delta;
+          player->timer -= delta;
         }
 
         if (IsKeyPressed(player->keys[0])) vel.y = -1;
@@ -202,28 +206,58 @@ int main(void) {
       }
 
       /* ===== Simulation ===== */
-      // {
-      //   for (int i = 0; i < enemies.count; i++) {
-      //     Enemy *enemy = &enemies.items[i];
+      {
+        {
+          if (player->health <= 0) {
+            printf("You lose hahaha >:()\n");
+            exit(1);
+          }
+        }
 
-      //     enemy->timer -= delta;
+        for (int i = 0; i < enemies.count; i++) {
+          Enemy *enemy = &enemies.items[i];
+          enemy->timer -= delta;
 
-      //     if (enemy->timer <= 0) {
-      //       enemy->timer = 0;
-      //       Bullet bullet = {
-      //         .dir = enemy->dir,
-      //         .speed = 1.0,
-      //       };
-      //       da_push(&bullets, bullet);
-      //     }
-      //   }
+          if (enemy->timer <= 0) {
+            Bullet bullet = {
+              .x = enemy->x,
+              .y = enemy->y,
+              .dir = enemy->dir,
+              .tps = 10.0,
+              .damage = 0.1,
+            };
+            pool_add(&bullets, bullet);
 
-      //   for (int i = 0; i < bullets.count; i++) {
-      //     Bullet *bullet = &bullets.items[i];
-      //     bullet->x += cos(bullet->dir) * delta;
-      //     bullet->y += sin(bullet->dir) * delta;
-      //   }
-      // }
+            enemy->timer = 1/enemy->tps;
+          }
+        }
+
+        for (int i = 0; i < bullets.count; i++) {
+          Bullet *bullet = &bullets.items[i];
+          if (bullet->freed) continue;
+          bullet->timer -= delta;
+
+          if (bullet->timer <= 0) {
+            bullet->x += bullet->dir.x;
+            bullet->y += bullet->dir.y;
+
+            bullet->timer = 1/bullet->tps;
+          }
+
+          if (maze.data[bullet->x][bullet->y] == WALL) {
+            bullet->freed = true;
+            pool_del(&bullets, i);
+            continue;
+          }
+
+          if (bullet->x == player->x && bullet->y == player->y) {
+            player->health -= bullet->damage;
+            bullet->freed = true;
+            pool_del(&bullets, i);
+            continue;
+          }
+        }
+      }
     }
     EndMode2D();
     EndDrawing();
