@@ -44,6 +44,7 @@ int main(void) {
       .color = BLUE,
     },
   };
+  int summoner_index = 0;
 
   bool initial = true; // This is a terrible solution
   float unit = 0;
@@ -62,6 +63,20 @@ int main(void) {
 
     BeginDrawing();
     ClearBackground(BLACK);
+
+    Camera2D camera = {
+      .target = {
+        .x = (players[0].pos.x + players[1].pos.x) * 0.5 * unit,
+        .y = (players[0].pos.y + players[1].pos.y) * 0.5 * unit,
+      },
+      .offset = {
+        min(win_width, win_height)/2,
+        min(win_width, win_height)/2,
+      },
+      .zoom = 1.0,
+    };
+
+    BeginMode2D(camera);
     for (int _ = 0; _ <= 1; _++) {
       Player *player = &players[_];
 
@@ -89,6 +104,7 @@ int main(void) {
         );
       }
     }
+    EndMode2D();
     EndDrawing();
 
     initial = false;
