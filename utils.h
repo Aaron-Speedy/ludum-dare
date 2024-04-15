@@ -39,7 +39,7 @@ int vec2i_at(Vec2I vec, int index);
     (xs)->count -= 1; \
   } while (0)
 
-#define da_last(xs) (assert((xs)->count > 0), (xs)->items[(xs)->count - 1])
+#define da_last(xs) (xs)->items[(xs)->count - 1]
 
 #define da_init(xs) \
 do { \

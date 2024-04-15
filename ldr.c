@@ -11,13 +11,35 @@
 
 #define Vec2 Vector2
 
+#define ENTITY_F() \
+  Vec2 pos; \
+  Vec2 size; \
+  float speed; \
+  float health; \
+  Color color
+
 typedef struct {
-  Vec2 pos;
-  Vec2 size;
-  float speed; // units per second
+  ENTITY_F();
   KeyboardKey keys[4];
-  Color color;
 } Player;
+
+typedef struct {
+  ENTITY_F();
+  float dir;
+  enum {
+    ENEMY_GUNMAN,
+    NUM_ENEMIES,
+  } type;
+} Enemy;
+
+Enemy enemy_defs[NUM_ENEMIES] = {
+  [ENEMY_GUNMAN] = {
+    .size = { 1.0, 1.0, },
+    .speed = 1.0,
+    .health = 1.0,
+    .color = { 255, 255, 0, 255, },
+  },
+};
 
 int main(void) {
   SetConfigFlags(FLAG_MSAA_4X_HINT);
@@ -35,6 +57,7 @@ int main(void) {
       .speed = 1.3,
       .keys = { KEY_W, KEY_A, KEY_S, KEY_D, },
       .color = RED,
+      .health = 1.0,
     },
     {
       .pos = { 0 },
@@ -42,9 +65,20 @@ int main(void) {
       .speed = 1.3,
       .keys = { KEY_K, KEY_H, KEY_J, KEY_L, },
       .color = BLUE,
+      .health = 1.0,
     },
   };
   int summoner_index = 0;
+
+  float map_width = 10, map_height = 10;
+
+  List(Enemy) enemies = { .cap = 256, };
+  da_init(&enemies);
+  da_push(&enemies, enemy_defs[ENEMY_GUNMAN]);
+  da_last(&enemies).pos = (Vec2) {
+    .x = randf(0, map_width),
+    .y = randf(0, map_height),
+  };
 
   bool initial = true; // This is a terrible solution
   float unit = 0;
@@ -80,6 +114,21 @@ int main(void) {
     for (int _ = 0; _ <= 1; _++) {
       Player *player = &players[_];
 
+      /* ===== Simulation ===== */
+      {
+        for (int i = 0; i < enemies.count; i++) {
+          Enemy *enemy = &enemies.items[i];
+
+          enemy->pos.x += cos(enemy->dir) * enemy->speed * delta;
+          enemy->pos.y += sin(enemy->dir) * enemy->speed * delta;
+
+          int follow_index = Vector2Distance(enemy->pos, players[0].pos) <
+                             Vector2Distance(enemy->pos, players[1].pos) ?
+                             0 : 1;
+          enemy->dir = Vector2Angle(enemy->pos, players[follow_index].pos);
+        }
+      }
+
       /* ===== Input ===== */
       {
         Vec2 vel = { 0 };
@@ -102,6 +151,17 @@ int main(void) {
           unit * player->size.y,
           player->color
         );
+
+        for (int i = 0; i < enemies.count; i++) {
+          Enemy *enemy = &enemies.items[i];
+          DrawRectangle(
+            unit * enemy->pos.x,
+            unit * enemy->pos.y,
+            unit * enemy->size.x,
+            unit * enemy->size.y,
+            enemy->color
+          );
+        }
       }
     }
     EndMode2D();
