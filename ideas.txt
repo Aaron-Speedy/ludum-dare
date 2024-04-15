@@ -1,0 +1,39 @@
+-split screen multiplayer
+-you are summoned into a maze
+-players are working together
+-pixel art
+-rogue like
+
+-players have different roles
+	*summoner
+		+if they die the game is over
+		+can summon the demon
+		+can buff demon
+		+loses demon fuse buffs on damage
+
+	*demon
+		+different types
+		+gets hard reset on death
+		+can fuse with the summoner
+			% if it has atleast 50% stats of the summoner
+			% buffs summoner
+			% swaps role with summoner, resets the demon
+
+-enemies
+	*skeleton
+	*Big Skeleton
+
+	*guy with gun
+	*Big guy with gun (he hits you with it)
+
+	*goo
+
+	*weak demon
+	*Big demon
+
+	
+a summoner is trying to escape a maze, so they summon a demon
+
+the demon doesn't like this arrangement but realizes that if they can posesses the summoner and make it out they have free reign, once the demon posesses the summoner it summons yet another demon and the cycle continues
+
+
