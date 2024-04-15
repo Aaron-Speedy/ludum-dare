@@ -74,7 +74,6 @@ int main(void) {
   };
   int summoner_index = 0;
 
-
   List(Enemy) enemies = { .cap = 256, };
   da_init(&enemies);
   da_push(&enemies, enemy_defs[ENEMY_GUNMAN]);
