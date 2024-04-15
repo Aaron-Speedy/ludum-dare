@@ -3,32 +3,29 @@
 
 #include "raylib.h"
 
-typedef struct {
-  char *data;
-  int wb, w, h;
-} Maze;
-
-enum {
+typedef enum {
   EXTRA = 0,
   WALL,
   FLOOR,
   PIT,
   NUM_BLOCK_TYPES,
-};
+} Block;
 
 static Color maze_colors[NUM_BLOCK_TYPES] = {
-  [WALL] = { 255, 255, 255, 255, },
+  [WALL] = { 100, 100, 100, 255, },
   [FLOOR] = { 0 },
   [PIT] = { 0 },
 };
 
-int maze_get(Maze maze, int x, int y);
-void maze_set(Maze maze, int x, int y, int v);
+#define MAX_MAZE_SIZE 500
 
-Maze gen_maze(int x, int y);
+typedef struct {
+  Block data[MAX_MAZE_SIZE][MAX_MAZE_SIZE];
+  int w, h;
+} Maze;
 
-void maze_free(Maze maze);
+void gen_maze(Maze *maze, int x, int y);
 
-void print_maze(Maze maze);
+void print_maze(Maze *maze);
 
 #endif // MAZE_H
